@@ -1,0 +1,24 @@
+# env files
+.env
+backend/.env
+mobile/.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# node
+node_modules
+
+# test artifacts
+coverage/
+frontend/coverage/
+backend/coverage.xml
+backend/coverage-unit.xml
+backend/coverage-integration.xml
+backend/.coverage
+
+# local editor metadata
+.cursor/

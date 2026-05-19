@@ -1,0 +1,79 @@
+name: Tests
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run backend unit tests with coverage gate
+        run: pytest tests/unit -q --cov-reset --cov=app.core.auth --cov-report=term-missing --cov-report=xml:coverage-unit.xml --cov-fail-under=70
+        env:
+          SUPABASE_URL: "http://localhost:54321"
+          SUPABASE_ANON_KEY: "ci_dummy_anon_key"
+          SUPABASE_SERVICE_ROLE_KEY: "ci_dummy_key"
+          SUPABASE_JWT_SECRET: "ci_dummy_jwt"
+
+      - name: Run backend integration tests with coverage gate
+        run: pytest tests/integration -q --cov-reset --cov=app.api.routes.health_route --cov=app.api.routes.lobby_route --cov=app.api.routes.matches_route --cov-report=term-missing --cov-report=xml:coverage-integration.xml --cov-fail-under=70
+        env:
+          SUPABASE_URL: "http://localhost:54321"
+          SUPABASE_ANON_KEY: "ci_dummy_anon_key"
+          SUPABASE_SERVICE_ROLE_KEY: "ci_dummy_key"
+          SUPABASE_JWT_SECRET: "ci_dummy_jwt"
+
+
+      - name: Upload backend coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-xml
+          path: |
+            backend/coverage-unit.xml
+            backend/coverage-integration.xml
+
+  frontend-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run frontend tests with coverage
+        run: npm run coverage -- --ci --watch=false
+
+      - name: Upload frontend coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
