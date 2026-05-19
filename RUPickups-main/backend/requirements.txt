@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+supabase
+python-dotenv
+pydantic-settings
+bcrypt
+pytest
+pytest-cov
+httpx
